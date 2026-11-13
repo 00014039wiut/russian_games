@@ -38,6 +38,11 @@
         <p>Расставьте буквы в правильном порядке и найдите глагол.</p>
         <button class="btn" data-mode="verb-scramble">Start</button>
       </div>
+      <div class="card" id="card-verb-list">
+        <h2>All Verbs from the Lesson</h2>
+        <p>Посмотрите полный список глаголов перед началом игры.</p>
+        <button class="btn" id="show-verb-list">View List</button>
+      </div>
     </section>
 
     <section id="quiz" class="hidden">
@@ -78,6 +83,16 @@
       <div class="end-controls">
         <button class="btn" id="replay-btn">Play Again</button>
         <button class="btn" id="menu-btn">Back to Menu</button>
+      </div>
+    </section>
+
+    <section id="verb-list-panel" class="hidden">
+      <div class="verb-list-box">
+        <div class="verb-list-header">
+          <h2>All Verbs from the Lesson</h2>
+          <button class="btn" id="close-verb-list">Close</button>
+        </div>
+        <ul id="verb-list"></ul>
       </div>
     </section>
 

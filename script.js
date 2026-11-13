@@ -127,33 +127,74 @@ const genderNouns = [
 const phrasePractice = newVerbPhrases.map(item => ({ ...item }));
 const phraseMatchVocabulary = newVerbPhrases.map(item => ({ ...item }));
 const verbScrambleVocabulary = [
-  'проводить',
-  'делать',
-  'объяснить',
-  'высказать',
-  'согласиться',
-  'привести',
-  'сказать',
-  'попросить',
-  'найти',
-  'думать',
-  'ждать',
-  'читать',
-  'слушать',
-  'покупать',
-  'готовить',
-  'пить',
-  'есть',
-  'убирать',
-  'мыть',
-  'открывать',
-  'закрывать',
-  'искать',
-  'брать',
-  'надевать',
-  'встречать',
-  'учить'
+  'брать', 'взять',
+  'включать', 'включить',
+  'выбирать', 'выбрать',
+  'выключать', 'выключить',
+  'готовить', 'приготовить',
+  'делать', 'сделать',
+  'есть', 'съесть',
+  'заказывать', 'заказать',
+  'закрывать', 'закрыть',
+  'искать', 'поискать',
+  'исправлять', 'исправить',
+  'менять', 'поменять',
+  'мыть', 'вымыть',
+  'обсуждать', 'обсудить',
+  'открывать', 'открыть',
+  'переводить', 'перевести',
+  'петь', 'спеть',
+  'пить', 'выпить',
+  'повторять', 'повторить',
+  'покупать', 'купить',
+  'получать', 'получить',
+  'принимать', 'принять',
+  'приносить', 'принести',
+  'проверять', 'проверить',
+  'рисовать', 'нарисовать',
+  'стирать', 'постирать',
+  'строить', 'построить',
+  'терять', 'потерять',
+  'убирать', 'убрать',
+  'учить', 'выучить',
+  'читать', 'прочитать',
+  'забывать', 'забыть',
+  'решать', 'решить',
+  'будить', 'разбудить',
+  'видеть', 'увидеть',
+  'встречать', 'встретить',
+  'ждать', 'подождать',
+  'поздравлять', 'поздравить',
+  'понимать', 'понять',
+  'приглашать', 'пригласить',
+  'спрашивать', 'спросить',
+  'говорить', 'сказать',
+  'давать', 'дать',
+  'писать', 'написать',
+  'посылать', 'послать',
+  'отправлять', 'отправить',
+  'звонить', 'позвонить',
+  'видеться', 'увидеться',
+  'встречаться', 'встретиться',
+  'договориваться', 'договориться',
+  'знакомиться', 'познакомиться',
+  'гулять', 'погулять',
+  'отдыхать', 'отдохнуть',
+  'мочь', 'смочь',
+  'думать', 'подумать',
+  'отвечать', 'ответить',
+  'платить', 'заплатить',
+  'играть', 'поиграть',
+  'возвращаться', 'вернуться',
+  'опаздывать', 'опоздать',
+  'ложиться', 'лечь',
+  'вставать', 'встать',
+  'болеть', 'заболеть',
+  'одеваться', 'одеться',
+  'раздеваться', 'раздеться'
 ];
+
+const fullLessonVerbs = [...new Set(verbScrambleVocabulary)];
 
 function shuffle(arr) {
   const copy = arr.slice();
@@ -175,6 +216,7 @@ function normalizeRussianAnswer(value) {
 const menu = document.getElementById('menu');
 const quiz = document.getElementById('quiz');
 const end = document.getElementById('end');
+const verbListPanel = document.getElementById('verb-list-panel');
 const modeTitle = document.getElementById('mode-title');
 const questionText = document.getElementById('question-text');
 const optionsEl = document.getElementById('options');
@@ -187,6 +229,7 @@ const finalScoreEl = document.getElementById('final-score');
 const phraseForm = document.getElementById('phrase-form');
 const answerInput = document.getElementById('answer-input');
 const submitBtn = document.getElementById('submit-btn');
+const verbList = document.getElementById('verb-list');
 
 let state = {
   mode: null,
@@ -211,6 +254,17 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   startQuiz(state.mode);
 });
 
+document.getElementById('show-verb-list').addEventListener('click', () => {
+  renderVerbList();
+  menu.classList.add('hidden');
+  verbListPanel.classList.remove('hidden');
+});
+
+document.getElementById('close-verb-list').addEventListener('click', () => {
+  verbListPanel.classList.add('hidden');
+  menu.classList.remove('hidden');
+});
+
 document.getElementById('back-btn').addEventListener('click', () => {
   backToMenu();
 });
@@ -233,9 +287,19 @@ answerInput.addEventListener('keydown', (event) => {
 function backToMenu() {
   quiz.classList.add('hidden');
   end.classList.add('hidden');
+  verbListPanel.classList.add('hidden');
   menu.classList.remove('hidden');
   state = { mode: null, questions: [], index: 0, score: 0, answered: false };
   answerInput.value = '';
+}
+
+function renderVerbList() {
+  verbList.innerHTML = '';
+  fullLessonVerbs.forEach((verb) => {
+    const li = document.createElement('li');
+    li.textContent = verb;
+    verbList.appendChild(li);
+  });
 }
 
 function startQuiz(mode) {
