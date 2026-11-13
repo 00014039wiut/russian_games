@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Russian–Uzbek Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Учебная игра: Русский — Узбек</h1>
+    </header>
+
+    <section id="menu" class="card-grid">
+      <div class="card" id="card-translation">
+        <h2>Russian–Uzbek Translation</h2>
+        <p>Переведите русское слово на узбекский.</p>
+        <button class="btn" data-mode="translation">Start</button>
+      </div>
+      <div class="card" id="card-gender">
+        <h2>Russian Noun Gender</h2>
+        <p>Определите род существительного, оканчивающегося на мягкий знак.</p>
+        <button class="btn" data-mode="gender">Start</button>
+      </div>
+      <div class="card" id="card-phrase">
+        <h2>Complete the Russian Phrase</h2>
+        <p>Напишите нужное существительное в форме, которая подходит к глаголу.</p>
+        <button class="btn" data-mode="phrase">Start</button>
+      </div>
+      <div class="card" id="card-phrase-match">
+        <h2>Russian Phrase Match</h2>
+        <p>Выберите правильный узбекский перевод русской фразы.</p>
+        <button class="btn" data-mode="phrase-match">Start</button>
+      </div>
+      <div class="card" id="card-verb-scramble">
+        <h2>Russian Verb Scramble</h2>
+        <p>Расставьте буквы в правильном порядке и найдите глагол.</p>
+        <button class="btn" data-mode="verb-scramble">Start</button>
+      </div>
+    </section>
+
+    <section id="quiz" class="hidden">
+      <div class="quiz-header">
+        <div class="meta">
+          <div id="mode-title"></div>
+          <div>Question <span id="current">0</span> of <span id="total">0</span></div>
+        </div>
+        <div class="score">Score: <span id="score">0</span></div>
+      </div>
+
+      <div class="progress">
+        <div id="progress-bar"></div>
+      </div>
+
+      <div class="question-area">
+        <div id="question-text" class="question-text"></div>
+        <div id="options" class="options"></div>
+        <div id="phrase-form" class="phrase-form hidden">
+          <label class="sr-only" for="answer-input">Type the noun</label>
+          <input id="answer-input" type="text" placeholder="Введите существительное" autocomplete="off" />
+          <button class="btn" id="submit-btn" type="button">Submit</button>
+        </div>
+      </div>
+
+      <div id="feedback" class="feedback hidden"></div>
+
+      <div class="controls">
+        <button class="btn" id="next-btn">Next Question</button>
+        <button class="btn" id="restart-btn">Restart</button>
+        <button class="btn" id="back-btn">Back to Menu</button>
+      </div>
+    </section>
+
+    <section id="end" class="hidden">
+      <h2>Round Complete</h2>
+      <p id="final-score"></p>
+      <div class="end-controls">
+        <button class="btn" id="replay-btn">Play Again</button>
+        <button class="btn" id="menu-btn">Back to Menu</button>
+      </div>
+    </section>
+
+    <footer>
+      <small>Vocabulary source: provided reference images (no external words).</small>
+    </footer>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
