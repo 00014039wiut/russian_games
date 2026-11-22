@@ -127,3 +127,16 @@ body.cam-active .container{margin:0 auto;padding:8px 12px;max-width:1200px}
   body.cam-active .container{padding:6px 8px}
   .cam-status{font-size:0.8rem}
 }
+
+/* ---------- Camera Quiz: topic picker ---------- */
+.topics-header h2{margin:0 0 4px}
+.topics-header p{margin:0 0 16px;color:var(--muted)}
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.topic-card{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:18px;border-radius:12px;border:2px solid transparent;
+  background:var(--card);box-shadow:0 6px 18px rgba(17,17,17,0.06);cursor:pointer;font:inherit;color:inherit;transition:transform .15s,border-color .15s,box-shadow .15s}
+.topic-card:hover,.topic-card:focus-visible{transform:translateY(-3px);border-color:var(--accent);box-shadow:0 10px 24px rgba(75,123,236,0.18);outline:none}
+.topic-icon{font-size:2rem;line-height:1}
+.topic-title{font-size:1.2rem;font-weight:700;margin-top:6px}
+.topic-subtitle{color:var(--muted)}
+.topic-count{margin-top:8px;font-size:0.8rem;font-weight:600;color:var(--accent);background:rgba(75,123,236,0.1);padding:2px 8px;border-radius:999px}
+@media (max-width:480px){.topic-grid{grid-template-columns:1fr 1fr;gap:10px}.topic-card{padding:14px}.topic-icon{font-size:1.6rem}.topic-title{font-size:1rem}}

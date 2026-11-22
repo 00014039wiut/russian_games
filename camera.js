@@ -13,7 +13,7 @@
   const FEEDBACK_MS = 1400;    // pause after an answer before the next question
   const SMOOTHING = 0.5;       // 0 = no smoothing, closer to 1 = smoother but laggier
   const INDEX_FINGER_TIP = 8;
-  const QUESTION_SECONDS = 10; // time limit per question
+  const QUESTION_SECONDS = 15; // time limit per question
   const START_COUNTDOWN = 3;   // 3-2-1 before the round begins
   const BASE_POINTS = 10;      // points for a correct answer, plus 1 per second left
 
@@ -33,6 +33,8 @@
   const timerBar = document.getElementById('cam-timer-bar');
   const countdownEl = document.getElementById('cam-countdown');
   const boxes = Array.from(document.querySelectorAll('.cam-choice'));
+  const topicsEl = document.getElementById('cam-topics');
+  const topicGrid = document.getElementById('topic-grid');
 
   let handLandmarker = null;
   let stream = null;
@@ -75,8 +77,49 @@
     });
   }
 
-  // Single words fit the boxes best, so use the word list (not the long phrases).
-  const vocab = uniqueByRussian(originalTranslationVocabulary);
+  // ---------- topics ----------
+  // To add a topic, add one block here. Each word needs `russian` and `uzbek`.
+  // A topic needs at least 4 words (one correct answer + three wrong ones).
+  const CAMERA_TOPICS = [
+    {
+      id: 'appearance',
+      icon: '👀',
+      title: 'Внешность',
+      subtitle: "Tashqi ko'rinish",
+      words: originalTranslationVocabulary,
+    },
+    {
+      id: 'phrases',
+      icon: '💬',
+      title: 'Фразы',
+      subtitle: 'Iboralar',
+      words: newVerbPhrases.map(({ russian, uzbek }) => ({ russian, uzbek })),
+    },
+    {
+      id: 'medical',
+      icon: '🩺',
+      title: 'У врача',
+      subtitle: 'Shifokor qabulida',
+      words: medicalVocabulary, // defined in script.js
+    },
+    {
+      id: 'instrumental-1',
+      icon: '🤝',
+      title: 'Творительный 1: Поведение и репутация',
+      subtitle: 'Xulq-atvor va obro‘',
+      words: instrumentalPart1, // №1–25, defined in script.js
+    },
+    {
+      id: 'instrumental-2',
+      icon: '🌪️',
+      title: 'Творительный 2: Чувства и испытания',
+      subtitle: 'His-tuyg‘ular va sinovlar',
+      words: instrumentalPart2, // №26–55, defined in script.js
+    },
+  ].map((t) => ({ ...t, words: uniqueByRussian(t.words) }))
+    .filter((t) => t.words.length >= 4);
+
+  let vocab = CAMERA_TOPICS[0].words; // words of the topic being played
 
   function buildChoices(q) {
     // Exclude words with the same Uzbek meaning (e.g. "tor" = узкий / узкие),
@@ -138,7 +181,44 @@
     lastVideoTime = -1;
   }
 
-  async function open() {
+  // ---------- screens ----------
+
+  function renderTopics() {
+    topicGrid.innerHTML = '';
+    CAMERA_TOPICS.forEach((topic) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'topic-card';
+      card.innerHTML = `
+        <span class="topic-icon"></span>
+        <span class="topic-title"></span>
+        <span class="topic-subtitle"></span>
+        <span class="topic-count"></span>`;
+      card.querySelector('.topic-icon').textContent = topic.icon;
+      card.querySelector('.topic-title').textContent = topic.title;
+      card.querySelector('.topic-subtitle').textContent = topic.subtitle;
+      card.querySelector('.topic-count').textContent = `${topic.words.length} слов`;
+      card.addEventListener('click', () => open(topic));
+      topicGrid.appendChild(card);
+    });
+  }
+
+  function showTopics() {
+    menuEl.classList.add('hidden');
+    section.classList.add('hidden');
+    document.body.classList.remove('cam-active');
+    topicsEl.classList.remove('hidden');
+    window.scrollTo(0, 0);
+  }
+
+  function showMenu() {
+    topicsEl.classList.add('hidden');
+    menuEl.classList.remove('hidden');
+  }
+
+  async function open(topic) {
+    vocab = topic.words;
+    topicsEl.classList.add('hidden');
     menuEl.classList.add('hidden');
     section.classList.remove('hidden');
     document.body.classList.add('cam-active');
@@ -156,6 +236,11 @@
 
     try {
       await Promise.all([startCamera(), loadHandLandmarker()]);
+      // The player may have pressed Back while the camera was still loading.
+      if (section.classList.contains('hidden')) {
+        stopCamera();
+        return;
+      }
       setStatus('Держите указательный палец на ответе 1 секунду.');
       loop();
     } catch (err) {
@@ -165,18 +250,19 @@
         ? 'Нет доступа к камере. Разрешите камеру в браузере или нажимайте на ответы мышкой.'
         : 'Не удалось запустить камеру. Можно нажимать на ответы мышкой.');
     }
+    if (section.classList.contains('hidden')) return;
     startRound();
   }
 
+  // Leave the game and go back to the topic list.
   function close() {
     stopCamera();
     stopTimer();
     game.roundId += 1;
     game.locked = true;
+    cursor.classList.add('hidden');
     countdownEl.classList.add('hidden');
-    document.body.classList.remove('cam-active');
-    section.classList.add('hidden');
-    menuEl.classList.remove('hidden');
+    showTopics();
   }
 
   // ---------- game flow ----------
@@ -414,7 +500,9 @@
   // Mouse / touch fallback, also handy for testing without a camera.
   boxes.forEach((box) => box.addEventListener('click', () => choose(box)));
 
-  document.getElementById('start-camera').addEventListener('click', open);
+  renderTopics();
+  document.getElementById('start-camera').addEventListener('click', showTopics);
+  document.getElementById('topics-back').addEventListener('click', showMenu);
   document.getElementById('cam-back').addEventListener('click', close);
   document.getElementById('cam-menu').addEventListener('click', close);
   document.getElementById('cam-replay').addEventListener('click', startRound);

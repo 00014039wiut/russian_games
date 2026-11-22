@@ -40,7 +40,7 @@
       </div>
       <div class="card" id="card-camera">
         <h2>Camera Quiz ✋</h2>
-        <p>Посмотрите на узбекское слово и пальцем выберите русский перевод.</p>
+        <p>Выберите тему и пальцем выбирайте русский перевод узбекского слова.</p>
         <button class="btn" id="start-camera">Start</button>
       </div>
       <div class="card" id="card-verb-list">
@@ -91,13 +91,24 @@
       </div>
     </section>
 
+    <section id="cam-topics" class="hidden">
+      <div class="topics-header">
+        <h2>Camera Quiz ✋ — выберите тему</h2>
+        <p>Mavzuni tanlang. Посмотрите на узбекское слово и пальцем выберите русский перевод.</p>
+      </div>
+      <div id="topic-grid" class="topic-grid"></div>
+      <div class="controls">
+        <button class="btn" id="topics-back">Back to Menu</button>
+      </div>
+    </section>
+
     <section id="camera-game" class="hidden">
       <div id="cam-stage" class="cam-stage">
         <video id="cam-video" playsinline muted></video>
         <div class="cam-timer-track"><div id="cam-timer-bar" class="cam-timer-bar"></div></div>
         <div class="cam-hud">
           <span id="cam-progress">1 / 10</span>
-          <span id="cam-timer" class="cam-timer">⏱ 10</span>
+          <span id="cam-timer" class="cam-timer">⏱ 15</span>
           <span>★ <span id="cam-score">0</span></span>
           <span id="cam-lives" class="cam-lives" aria-label="Lives"></span>
         </div>
@@ -113,14 +124,14 @@
           <p id="cam-end-text"></p>
           <div class="end-controls">
             <button class="btn" id="cam-replay">Play Again</button>
-            <button class="btn" id="cam-menu">Back to Menu</button>
+            <button class="btn" id="cam-menu">Choose Topic</button>
           </div>
         </div>
       </div>
 
       <div class="cam-footer">
         <p id="cam-status" class="cam-status"></p>
-        <button class="btn" id="cam-back">Back to Menu</button>
+        <button class="btn" id="cam-back">← Topics</button>
       </div>
     </section>
 
