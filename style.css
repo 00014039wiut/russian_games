@@ -140,3 +140,13 @@ body.cam-active .container{margin:0 auto;padding:8px 12px;max-width:1200px}
 .topic-subtitle{color:var(--muted)}
 .topic-count{margin-top:8px;font-size:0.8rem;font-weight:600;color:var(--accent);background:rgba(75,123,236,0.1);padding:2px 8px;border-radius:999px}
 @media (max-width:480px){.topic-grid{grid-template-columns:1fr 1fr;gap:10px}.topic-card{padding:14px}.topic-icon{font-size:1.6rem}.topic-title{font-size:1rem}}
+
+/* ---------- Camera Quiz: gestures & pause ---------- */
+.cam-cursor{transition:background-color .1s,width .1s,height .1s,left .1s,top .1s}
+.cam-cursor.pinch{background:#2ecc71;width:16px;height:16px;left:-8px;top:-8px}
+.cam-cursor.palm{background:#4b7bec;width:34px;height:34px;left:-17px;top:-17px}
+.cam-paused{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.65);color:#fff;z-index:6;text-align:center;padding:16px;cursor:pointer}
+.cam-paused.hidden{display:none}
+.cam-paused-title{font-size:clamp(28px,8cqw,72px);font-weight:800;color:#ffd84d}
+.cam-paused p{margin:0;font-size:clamp(13px,2.4cqw,20px)}
+.cam-footer .btn{white-space:nowrap}

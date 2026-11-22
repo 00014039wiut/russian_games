@@ -13,6 +13,11 @@
   const FEEDBACK_MS = 1400;    // pause after an answer before the next question
   const SMOOTHING = 0.5;       // 0 = no smoothing, closer to 1 = smoother but laggier
   const INDEX_FINGER_TIP = 8;
+  // Gestures (MediaPipe gives 21 hand points; distances are divided by the hand's
+  // size so they work whether the hand is near or far from the camera).
+  const PINCH_ON = 0.3;        // thumb–index distance below this = pinch starts
+  const PINCH_OFF = 0.5;       // …and above this = pinch released (gap avoids flicker)
+  const PALM_HOLD_MS = 700;    // open palm must be held this long to pause / resume
   const QUESTION_SECONDS = 15; // time limit per question
   const START_COUNTDOWN = 3;   // 3-2-1 before the round begins
   const BASE_POINTS = 10;      // points for a correct answer, plus 1 per second left
@@ -35,6 +40,8 @@
   const boxes = Array.from(document.querySelectorAll('.cam-choice'));
   const topicsEl = document.getElementById('cam-topics');
   const topicGrid = document.getElementById('topic-grid');
+  const pausedEl = document.getElementById('cam-paused');
+  const pauseBtn = document.getElementById('cam-pause');
 
   let handLandmarker = null;
   let stream = null;
@@ -55,6 +62,11 @@
     deadline: 0,        // performance.now() time when the current question expires
     timerId: null,
     roundId: 0,         // bumps on every new round / exit so stale timeouts do nothing
+    paused: false,
+    pausedRemaining: 0, // ms left on the question timer when paused
+    pinching: false,
+    palmSince: 0,       // when the open palm was first seen (0 = not showing)
+    palmLatched: false, // palm already toggled pause; must close the hand before it can again
   };
 
   // ---------- vocabulary ----------
@@ -103,6 +115,13 @@
       words: medicalVocabulary, // defined in script.js
     },
     {
+      id: 'instrumental-basics',
+      icon: '✏️',
+      title: 'Творительный: Основы',
+      subtitle: 'Asosiy so‘z birikmalari',
+      words: instrumentalBasics, // defined in script.js, words have a `group`
+    },
+    {
       id: 'instrumental-1',
       icon: '🤝',
       title: 'Творительный 1: Поведение и репутация',
@@ -124,9 +143,12 @@
   function buildChoices(q) {
     // Exclude words with the same Uzbek meaning (e.g. "tor" = узкий / узкие),
     // otherwise two boxes could both be correct.
-    const wrong = shuffleArr(vocab.filter((v) => v.uzbek !== q.uzbek && v.russian !== q.russian))
-      .slice(0, 3)
-      .map((v) => v.russian);
+    const candidates = vocab.filter((v) => v.uzbek !== q.uzbek && v.russian !== q.russian);
+    // If the topic has groups, take wrong answers from the same group first
+    // (под столом vs над столом is a better test than под столом vs работать врачом).
+    const sameGroup = q.group ? shuffleArr(candidates.filter((v) => v.group === q.group)) : [];
+    const others = shuffleArr(candidates.filter((v) => !sameGroup.includes(v)));
+    const wrong = [...sameGroup, ...others].slice(0, 3).map((v) => v.russian);
     return shuffleArr([q.russian, ...wrong]);
   }
 
@@ -241,7 +263,7 @@
         stopCamera();
         return;
       }
-      setStatus('Держите указательный палец на ответе 1 секунду.');
+      setStatus('☝ Держите палец на ответе 1 сек. или 🤏 сожмите пальцы. ✋ Ладонь — пауза.');
       loop();
     } catch (err) {
       console.error(err);
@@ -260,6 +282,7 @@
     stopTimer();
     game.roundId += 1;
     game.locked = true;
+    clearPause();
     cursor.classList.add('hidden');
     countdownEl.classList.add('hidden');
     showTopics();
@@ -271,6 +294,7 @@
     game.roundId += 1;
     const round = game.roundId;
     stopTimer();
+    clearPause();
     game.locked = true;
     game.questions = shuffleArr(vocab).slice(0, QUESTIONS_PER_ROUND);
     game.index = 0;
@@ -314,9 +338,9 @@
 
   // ---------- question timer ----------
 
-  function startTimer() {
+  function startTimer(ms = QUESTION_SECONDS * 1000) {
     stopTimer();
-    game.deadline = performance.now() + QUESTION_SECONDS * 1000;
+    game.deadline = performance.now() + ms;
     game.timerId = setInterval(() => {
       const left = game.deadline - performance.now();
       setTimerDisplay(left);
@@ -341,6 +365,51 @@
     const urgent = ms <= 3000;
     timerBar.classList.toggle('urgent', urgent);
     timerEl.classList.toggle('urgent', urgent);
+  }
+
+  // ---------- pause ----------
+
+  // Pausing is only possible while a question is being answered
+  // (not during the 3-2-1 countdown, the answer feedback, or the end screen).
+  function canPause() {
+    return !game.paused && !game.locked && game.timerId !== null;
+  }
+
+  function pause() {
+    if (!canPause()) return;
+    game.paused = true;
+    game.pausedRemaining = Math.max(0, game.deadline - performance.now());
+    stopTimer();
+    game.locked = true;
+    if (game.hoverBox) {
+      game.hoverBox.classList.remove('hover');
+      game.hoverBox.style.setProperty('--fill', '0');
+    }
+    game.hoverBox = null;
+    pausedEl.classList.remove('hidden');
+    pauseBtn.textContent = '▶ Продолжить';
+  }
+
+  function resume() {
+    if (!game.paused) return;
+    game.paused = false;
+    pausedEl.classList.add('hidden');
+    pauseBtn.textContent = '⏸ Пауза';
+    game.locked = false;
+    game.armed = false; // move the finger off the boxes before a new hold starts
+    startTimer(game.pausedRemaining);
+  }
+
+  function togglePause() {
+    if (game.paused) resume();
+    else pause();
+  }
+
+  // Reset pause state without resuming (new round / leaving the game).
+  function clearPause() {
+    game.paused = false;
+    pausedEl.classList.add('hidden');
+    pauseBtn.textContent = '⏸ Пауза';
   }
 
   function showQuestion() {
@@ -436,7 +505,11 @@
 
     if (!hand) {
       game.cursor = null;
+      game.pinching = false;
+      game.palmSince = 0;
+      game.palmLatched = false;
       cursor.classList.add('hidden');
+      cursor.classList.remove('pinch', 'palm');
       updateHover(null);
       return;
     }
@@ -454,7 +527,64 @@
 
     cursor.classList.remove('hidden');
     cursor.style.transform = `translate(${game.cursor.x}px, ${game.cursor.y}px)`;
-    updateHover(boxAt(game.cursor.x, game.cursor.y, rect));
+
+    const box = boxAt(game.cursor.x, game.cursor.y, rect);
+    const { pinch, palm } = readGestures(hand);
+    cursor.classList.toggle('pinch', pinch);
+    cursor.classList.toggle('palm', palm);
+
+    handlePalm(palm);
+    if (game.paused) return;
+
+    // Pinch = select instantly. Only on the moment the pinch starts, so keeping
+    // the fingers together doesn't also answer the next question.
+    if (pinch && !game.pinching && !game.locked) {
+      const target = box || game.hoverBox; // fingers drift a bit while pinching
+      if (target) choose(target);
+    }
+    game.pinching = pinch;
+
+    // An open palm is for pausing, so it shouldn't also fill up a box.
+    updateHover(palm ? null : box);
+  }
+
+  // ---------- gestures ----------
+
+  // Hand points used (MediaPipe numbering):
+  //   0 wrist · 4 thumb tip · 5 index base · 9 middle base
+  //   index 6→8, middle 10→12, ring 14→16, pinky 18→20 (middle joint → tip)
+  function readGestures(hand) {
+    const w = video.videoWidth || 1;
+    const h = video.videoHeight || 1;
+    const dist = (a, b) => Math.hypot((hand[a].x - hand[b].x) * w, (hand[a].y - hand[b].y) * h);
+    const handSize = dist(0, 9) || 1; // wrist → middle-finger base
+
+    const pinchRatio = dist(4, 8) / handSize;
+    const pinch = game.pinching ? pinchRatio < PINCH_OFF : pinchRatio < PINCH_ON;
+
+    // A finger is straight if its tip is clearly farther from the wrist than its middle joint.
+    const straight = (tip, joint) => dist(tip, 0) > dist(joint, 0) * 1.1;
+    const fourFingers = straight(8, 6) && straight(12, 10) && straight(16, 14) && straight(20, 18);
+    const thumbOut = dist(4, 5) / handSize > 0.45;
+    const palm = fourFingers && thumbOut && !pinch;
+
+    return { pinch, palm };
+  }
+
+  // Open palm held for PALM_HOLD_MS toggles pause. After toggling, the hand has to
+  // close (or leave) first, so one long palm doesn't pause and resume repeatedly.
+  function handlePalm(palm) {
+    if (!palm) {
+      game.palmSince = 0;
+      game.palmLatched = false;
+      return;
+    }
+    if (game.palmLatched) return;
+    if (!game.palmSince) game.palmSince = performance.now();
+    if (performance.now() - game.palmSince >= PALM_HOLD_MS) {
+      game.palmLatched = true;
+      togglePause();
+    }
   }
 
   function boxAt(x, y, stageRect) {
@@ -506,4 +636,11 @@
   document.getElementById('cam-back').addEventListener('click', close);
   document.getElementById('cam-menu').addEventListener('click', close);
   document.getElementById('cam-replay').addEventListener('click', startRound);
+  pauseBtn.addEventListener('click', togglePause);
+  pausedEl.addEventListener('click', resume);
+
+  // Pause automatically when the player switches tabs or apps.
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !section.classList.contains('hidden')) pause();
+  });
 })();
