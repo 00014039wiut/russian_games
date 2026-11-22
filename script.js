@@ -239,7 +239,7 @@ let state = {
   answered: false,
 };
 
-document.querySelectorAll('#menu .btn').forEach((btn) => {
+document.querySelectorAll('#menu .btn[data-mode]').forEach((btn) => {
   btn.addEventListener('click', () => {
     startQuiz(btn.dataset.mode);
   });

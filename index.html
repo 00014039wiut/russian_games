@@ -38,6 +38,11 @@
         <p>Расставьте буквы в правильном порядке и найдите глагол.</p>
         <button class="btn" data-mode="verb-scramble">Start</button>
       </div>
+      <div class="card" id="card-camera">
+        <h2>Camera Quiz ✋</h2>
+        <p>Посмотрите на узбекское слово и пальцем выберите русский перевод.</p>
+        <button class="btn" id="start-camera">Start</button>
+      </div>
       <div class="card" id="card-verb-list">
         <h2>All Verbs from the Lesson</h2>
         <p>Посмотрите полный список глаголов перед началом игры.</p>
@@ -86,6 +91,40 @@
       </div>
     </section>
 
+    <section id="camera-game" class="hidden">
+      <div class="quiz-header">
+        <div class="meta">Camera Quiz · <span id="cam-progress">1 / 10</span></div>
+        <div class="cam-hud">
+          <span class="score">Score: <span id="cam-score">0</span></span>
+          <span id="cam-lives" class="cam-lives" aria-label="Lives"></span>
+        </div>
+      </div>
+
+      <div id="cam-stage" class="cam-stage">
+        <video id="cam-video" playsinline muted></video>
+        <div id="cam-prompt" class="cam-prompt"></div>
+        <div class="cam-choice" style="top:4%;left:3%" data-word=""></div>
+        <div class="cam-choice" style="top:4%;right:3%" data-word=""></div>
+        <div class="cam-choice" style="bottom:4%;left:3%" data-word=""></div>
+        <div class="cam-choice" style="bottom:4%;right:3%" data-word=""></div>
+        <div id="cam-cursor" class="cam-cursor hidden"></div>
+        <div id="cam-end" class="cam-end hidden">
+          <h2>Раунд окончен</h2>
+          <p id="cam-end-text"></p>
+          <div class="end-controls">
+            <button class="btn" id="cam-replay">Play Again</button>
+            <button class="btn" id="cam-menu">Back to Menu</button>
+          </div>
+        </div>
+      </div>
+
+      <p id="cam-status" class="cam-status"></p>
+
+      <div class="controls">
+        <button class="btn" id="cam-back">Back to Menu</button>
+      </div>
+    </section>
+
     <section id="verb-list-panel" class="hidden">
       <div class="verb-list-box">
         <div class="verb-list-header">
@@ -102,5 +141,6 @@
   </main>
 
   <script src="script.js"></script>
+  <script src="camera.js"></script>
 </body>
 </html>
