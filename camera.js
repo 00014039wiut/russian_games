@@ -114,9 +114,20 @@
     });
     video.srcObject = stream;
     await video.play();
-    // Make the stage match the camera's aspect ratio so landmark coordinates map 1:1.
-    stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+    applyAspect();
   }
+
+  // Make the stage match the camera's aspect ratio so landmark coordinates map 1:1.
+  // Phones held upright give a portrait stream, which switches to the portrait layout.
+  function applyAspect() {
+    if (!video.videoWidth || !video.videoHeight) return;
+    const ar = video.videoWidth / video.videoHeight;
+    stage.style.setProperty('--cam-ar', String(ar));
+    stage.classList.toggle('portrait', ar < 1);
+  }
+
+  // Fires when the stream size changes, e.g. when the phone is rotated.
+  video.addEventListener('resize', applyAspect);
 
   function stopCamera() {
     if (rafId) cancelAnimationFrame(rafId);
@@ -130,6 +141,8 @@
   async function open() {
     menuEl.classList.add('hidden');
     section.classList.remove('hidden');
+    document.body.classList.add('cam-active');
+    window.scrollTo(0, 0);
     endEl.classList.add('hidden');
     resetBoxes();
     promptEl.textContent = '';
@@ -161,6 +174,7 @@
     game.roundId += 1;
     game.locked = true;
     countdownEl.classList.add('hidden');
+    document.body.classList.remove('cam-active');
     section.classList.add('hidden');
     menuEl.classList.remove('hidden');
   }

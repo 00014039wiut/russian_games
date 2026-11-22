@@ -92,24 +92,21 @@
     </section>
 
     <section id="camera-game" class="hidden">
-      <div class="quiz-header">
-        <div class="meta">Camera Quiz · <span id="cam-progress">1 / 10</span></div>
-        <div class="cam-hud">
-          <span id="cam-timer" class="cam-timer">⏱ 10</span>
-          <span class="score">Score: <span id="cam-score">0</span></span>
-          <span id="cam-lives" class="cam-lives" aria-label="Lives"></span>
-        </div>
-      </div>
-
       <div id="cam-stage" class="cam-stage">
         <video id="cam-video" playsinline muted></video>
         <div class="cam-timer-track"><div id="cam-timer-bar" class="cam-timer-bar"></div></div>
+        <div class="cam-hud">
+          <span id="cam-progress">1 / 10</span>
+          <span id="cam-timer" class="cam-timer">⏱ 10</span>
+          <span>★ <span id="cam-score">0</span></span>
+          <span id="cam-lives" class="cam-lives" aria-label="Lives"></span>
+        </div>
         <div id="cam-countdown" class="cam-countdown hidden"></div>
         <div id="cam-prompt" class="cam-prompt"></div>
-        <div class="cam-choice" style="top:4%;left:3%" data-word=""></div>
-        <div class="cam-choice" style="top:4%;right:3%" data-word=""></div>
-        <div class="cam-choice" style="bottom:4%;left:3%" data-word=""></div>
-        <div class="cam-choice" style="bottom:4%;right:3%" data-word=""></div>
+        <div class="cam-choice tl" data-word=""></div>
+        <div class="cam-choice tr" data-word=""></div>
+        <div class="cam-choice bl" data-word=""></div>
+        <div class="cam-choice br" data-word=""></div>
         <div id="cam-cursor" class="cam-cursor hidden"></div>
         <div id="cam-end" class="cam-end hidden">
           <h2>Раунд окончен</h2>
@@ -121,9 +118,8 @@
         </div>
       </div>
 
-      <p id="cam-status" class="cam-status"></p>
-
-      <div class="controls">
+      <div class="cam-footer">
+        <p id="cam-status" class="cam-status"></p>
         <button class="btn" id="cam-back">Back to Menu</button>
       </div>
     </section>

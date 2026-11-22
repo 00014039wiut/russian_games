@@ -44,29 +44,86 @@ footer{margin-top:20px;color:var(--muted);font-size:0.85rem}
 @media(min-width:720px){.options{grid-template-columns:repeat(2,1fr)}}
 
 /* ---------- Camera Quiz ---------- */
-.cam-hud{display:flex;gap:14px;align-items:center}
-.cam-lives{color:var(--danger);font-size:1.1rem;letter-spacing:2px}
-.cam-stage{position:relative;width:100%;aspect-ratio:16/9;background:#111;border-radius:12px;overflow:hidden;user-select:none}
+/* The stage keeps the camera's aspect ratio (--cam-ar, set from JS) and is
+   limited by both the page width and the window height, so it always fits.
+   Sizes inside use cqw (percent of the stage width) so text scales with it. */
+.cam-stage{--cam-ar:1.7778;position:relative;margin:0 auto;aspect-ratio:var(--cam-ar);
+  width:min(100%, calc((100vh - 70px) * var(--cam-ar)));
+  width:min(100%, calc((100dvh - 70px) * var(--cam-ar)));
+  container-type:inline-size;background:#111;border-radius:12px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .cam-stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;transform:scaleX(-1)}
-.cam-prompt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:10px 22px;border-radius:12px;background:rgba(0,0,0,0.55);color:#ffd84d;font-size:clamp(1.2rem,4vw,2.4rem);font-weight:700;text-align:center;pointer-events:none;max-width:40%}
-.cam-prompt:empty{display:none}
-.cam-choice{position:absolute;width:28%;min-height:20%;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;border-radius:12px;border:3px solid rgba(255,255,255,0.85);color:#fff;font-size:clamp(0.9rem,2.6vw,1.6rem);font-weight:700;cursor:pointer;overflow:hidden;
-  --fill:0;background:linear-gradient(to top,rgba(75,123,236,0.85) calc(var(--fill) * 100%),rgba(0,0,0,0.45) calc(var(--fill) * 100%));
-  text-shadow:0 1px 3px rgba(0,0,0,0.6);transition:border-color .15s,transform .15s}
-.cam-choice.hover{border-color:#ffd84d;transform:scale(1.04)}
-.cam-choice.correct{background:rgba(40,167,69,0.85);border-color:#fff}
-.cam-choice.wrong{background:rgba(220,53,69,0.85);border-color:#fff}
-.cam-cursor{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:#ffd84d;border:3px solid #fff;box-shadow:0 0 12px rgba(255,216,77,0.9);pointer-events:none;z-index:5}
-.cam-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.7);color:#fff;z-index:6;text-align:center;padding:16px}
-.cam-end.hidden{display:none}
-.cam-cursor.hidden{display:none}
-.cam-status{color:var(--muted);font-size:0.9rem;margin:8px 0 0}
-.cam-timer{font-weight:700;font-variant-numeric:tabular-nums;min-width:3.2em}
-.cam-timer.urgent{color:var(--danger)}
+
+/* timer bar along the top edge */
 .cam-timer-track{position:absolute;left:0;right:0;top:0;height:8px;background:rgba(0,0,0,0.35);z-index:4}
 .cam-timer-bar{height:100%;width:100%;background:#2ecc71;transition:width .1s linear,background-color .3s}
 .cam-timer-bar.urgent{background:var(--danger)}
-.cam-countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(3rem,14vw,8rem);font-weight:800;color:#ffd84d;text-shadow:0 4px 18px rgba(0,0,0,0.7);background:rgba(0,0,0,0.35);pointer-events:none;z-index:6}
+
+/* HUD on top of the camera, always visible */
+.cam-hud{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:clamp(6px,1.6cqw,14px);align-items:center;white-space:nowrap;
+  padding:5px 12px;border-radius:999px;background:rgba(0,0,0,0.6);color:#fff;font-weight:700;font-size:clamp(11px,1.8cqw,18px);z-index:5;pointer-events:none}
+.cam-timer{font-variant-numeric:tabular-nums;min-width:2.8em}
+.cam-timer.urgent,.cam-lives{color:#ff6b6b}
+.cam-lives{letter-spacing:1px}
+
+/* Uzbek word in the middle */
+.cam-prompt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);padding:.35em .8em;border-radius:12px;background:rgba(0,0,0,0.55);color:#ffd84d;
+  font-size:clamp(16px,4.2cqw,40px);font-weight:700;text-align:center;pointer-events:none;max-width:40%;overflow-wrap:anywhere}
+.cam-prompt:empty{display:none}
+
+/* answer boxes in the four corners */
+.cam-choice{position:absolute;width:28%;min-height:20%;display:flex;align-items:center;justify-content:center;text-align:center;padding:6px;border-radius:12px;
+  border:3px solid rgba(255,255,255,0.85);color:#fff;font-size:clamp(11px,2.6cqw,28px);font-weight:700;line-height:1.15;cursor:pointer;overflow:hidden;
+  overflow-wrap:anywhere;hyphens:auto;-webkit-hyphens:auto;
+  --fill:0;background:linear-gradient(to top,rgba(75,123,236,0.85) calc(var(--fill) * 100%),rgba(0,0,0,0.45) calc(var(--fill) * 100%));
+  text-shadow:0 1px 3px rgba(0,0,0,0.6);transition:border-color .15s,transform .15s}
+.cam-choice.tl{top:4%;left:3%}
+.cam-choice.tr{top:4%;right:3%}
+.cam-choice.bl{bottom:4%;left:3%}
+.cam-choice.br{bottom:4%;right:3%}
+.cam-choice.hover{border-color:#ffd84d;transform:scale(1.04)}
+.cam-choice.correct{background:rgba(40,167,69,0.85);border-color:#fff}
+.cam-choice.wrong{background:rgba(220,53,69,0.85);border-color:#fff}
+
+/* fingertip dot */
+.cam-cursor{position:absolute;left:-12px;top:-12px;width:24px;height:24px;border-radius:50%;background:#ffd84d;border:3px solid #fff;box-shadow:0 0 12px rgba(255,216,77,0.9);pointer-events:none;z-index:5}
+.cam-cursor.hidden{display:none}
+
+/* 3-2-1 countdown */
+.cam-countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(48px,16cqw,140px);font-weight:800;color:#ffd84d;text-shadow:0 4px 18px rgba(0,0,0,0.7);background:rgba(0,0,0,0.35);pointer-events:none;z-index:6}
 .cam-countdown.hidden{display:none}
 .cam-countdown.pop{animation:cam-pop .9s ease-out}
 @keyframes cam-pop{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.85}}
+
+/* end-of-round overlay */
+.cam-end{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,0.7);color:#fff;z-index:7;text-align:center;padding:16px}
+.cam-end h2{margin:0;font-size:clamp(18px,4cqw,32px)}
+.cam-end p{margin:4px 0 10px;font-size:clamp(14px,2.8cqw,22px)}
+.cam-end.hidden{display:none}
+
+/* status text + back button under the camera, on one row */
+.cam-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px auto 0;max-width:100%}
+.cam-status{color:var(--muted);font-size:0.9rem;margin:0;flex:1}
+
+/* Narrow landscape stages (small laptops, phones sideways):
+   push the top boxes down so they never overlap the HUD. */
+@container (max-width: 640px){
+  .cam-choice.tl,.cam-choice.tr{top:15%}
+  .cam-choice{min-height:22%;border-width:2px;border-radius:10px}
+}
+
+/* Portrait (phone held upright): taller stage, so wider, shorter boxes
+   and bigger text relative to the narrow width. */
+.cam-stage.portrait .cam-choice{width:44%;min-height:13%;font-size:clamp(13px,5.2cqw,26px)}
+.cam-stage.portrait .cam-choice.tl,.cam-stage.portrait .cam-choice.tr{top:9%}
+.cam-stage.portrait .cam-choice.tl,.cam-stage.portrait .cam-choice.bl{left:4%}
+.cam-stage.portrait .cam-choice.tr,.cam-stage.portrait .cam-choice.br{right:4%}
+.cam-stage.portrait .cam-prompt{max-width:80%;font-size:clamp(20px,8cqw,40px)}
+.cam-stage.portrait .cam-hud{font-size:clamp(11px,3.6cqw,16px);top:12px}
+
+/* while the camera game is open, hide the page title/footer to give it room */
+body.cam-active header, body.cam-active footer{display:none}
+body.cam-active .container{margin:0 auto;padding:8px 12px;max-width:1200px}
+@media (max-width:600px){
+  body.cam-active .container{padding:6px 8px}
+  .cam-status{font-size:0.8rem}
+}
