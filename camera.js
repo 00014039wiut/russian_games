@@ -13,6 +13,9 @@
   const FEEDBACK_MS = 1400;    // pause after an answer before the next question
   const SMOOTHING = 0.5;       // 0 = no smoothing, closer to 1 = smoother but laggier
   const INDEX_FINGER_TIP = 8;
+  const QUESTION_SECONDS = 10; // time limit per question
+  const START_COUNTDOWN = 3;   // 3-2-1 before the round begins
+  const BASE_POINTS = 10;      // points for a correct answer, plus 1 per second left
 
   const section = document.getElementById('camera-game');
   const menuEl = document.getElementById('menu');
@@ -26,6 +29,9 @@
   const progressEl = document.getElementById('cam-progress');
   const endEl = document.getElementById('cam-end');
   const endTextEl = document.getElementById('cam-end-text');
+  const timerEl = document.getElementById('cam-timer');
+  const timerBar = document.getElementById('cam-timer-bar');
+  const countdownEl = document.getElementById('cam-countdown');
   const boxes = Array.from(document.querySelectorAll('.cam-choice'));
 
   let handLandmarker = null;
@@ -44,6 +50,9 @@
     hoverBox: null,
     hoverStart: 0,
     cursor: null,       // smoothed {x, y} in stage pixels
+    deadline: 0,        // performance.now() time when the current question expires
+    timerId: null,
+    roundId: 0,         // bumps on every new round / exit so stale timeouts do nothing
   };
 
   // ---------- vocabulary ----------
@@ -148,7 +157,10 @@
 
   function close() {
     stopCamera();
+    stopTimer();
+    game.roundId += 1;
     game.locked = true;
+    countdownEl.classList.add('hidden');
     section.classList.add('hidden');
     menuEl.classList.remove('hidden');
   }
@@ -156,13 +168,79 @@
   // ---------- game flow ----------
 
   function startRound() {
+    game.roundId += 1;
+    const round = game.roundId;
+    stopTimer();
+    game.locked = true;
     game.questions = shuffleArr(vocab).slice(0, QUESTIONS_PER_ROUND);
     game.index = 0;
     game.score = 0;
     game.lives = START_LIVES;
     endEl.classList.add('hidden');
+    promptEl.textContent = '';
+    boxes.forEach((b) => { b.textContent = ''; b.dataset.word = ''; });
+    resetBoxes();
+    setTimerDisplay(QUESTION_SECONDS * 1000);
     updateHud();
-    showQuestion();
+
+    // 3… 2… 1… Старт!
+    let n = START_COUNTDOWN;
+    const tick = () => {
+      if (round !== game.roundId) return;
+      if (n > 0) {
+        showCountdown(String(n));
+        n -= 1;
+        setTimeout(tick, 1000);
+      } else {
+        showCountdown('Старт!');
+        setTimeout(() => {
+          if (round !== game.roundId) return;
+          countdownEl.classList.add('hidden');
+          showQuestion();
+        }, 600);
+      }
+    };
+    tick();
+  }
+
+  function showCountdown(text) {
+    countdownEl.textContent = text;
+    countdownEl.classList.remove('hidden');
+    // restart the pop animation
+    countdownEl.classList.remove('pop');
+    void countdownEl.offsetWidth;
+    countdownEl.classList.add('pop');
+  }
+
+  // ---------- question timer ----------
+
+  function startTimer() {
+    stopTimer();
+    game.deadline = performance.now() + QUESTION_SECONDS * 1000;
+    game.timerId = setInterval(() => {
+      const left = game.deadline - performance.now();
+      setTimerDisplay(left);
+      if (left <= 0) resolve(null); // time is up
+    }, 100);
+  }
+
+  function stopTimer() {
+    if (game.timerId) clearInterval(game.timerId);
+    game.timerId = null;
+  }
+
+  function secondsLeft() {
+    return Math.max(0, Math.ceil((game.deadline - performance.now()) / 1000));
+  }
+
+  function setTimerDisplay(msLeft) {
+    const ms = Math.max(0, msLeft);
+    const fraction = ms / (QUESTION_SECONDS * 1000);
+    timerEl.textContent = `⏱ ${Math.ceil(ms / 1000)}`;
+    timerBar.style.width = `${fraction * 100}%`;
+    const urgent = ms <= 3000;
+    timerBar.classList.toggle('urgent', urgent);
+    timerEl.classList.toggle('urgent', urgent);
   }
 
   function showQuestion() {
@@ -178,23 +256,37 @@
     game.armed = false;
     game.locked = false;
     updateHud();
+    startTimer();
   }
 
   function choose(box) {
+    resolve(box);
+  }
+
+  // box = the chosen box, or null when the time ran out
+  function resolve(box) {
     if (game.locked) return;
     game.locked = true;
-    const isCorrect = box.dataset.word === game.correct;
-    box.classList.add(isCorrect ? 'correct' : 'wrong');
+    stopTimer();
+    const round = game.roundId;
+    const isCorrect = !!box && box.dataset.word === game.correct;
+
     if (isCorrect) {
-      game.score += 1;
+      const bonus = secondsLeft();
+      game.score += BASE_POINTS + bonus;
+      box.classList.add('correct');
+      setStatus(`Правильно! +${BASE_POINTS + bonus} (бонус за скорость: ${bonus})`);
     } else {
       game.lives -= 1;
+      if (box) box.classList.add('wrong');
       boxes.find((b) => b.dataset.word === game.correct)?.classList.add('correct');
+      setStatus(box ? `Неправильно. Ответ: ${game.correct}` : `Время вышло! Ответ: ${game.correct}`);
     }
+    boxes.forEach((b) => { b.classList.remove('hover'); });
     updateHud();
 
     setTimeout(() => {
-      if (section.classList.contains('hidden')) return;
+      if (round !== game.roundId || section.classList.contains('hidden')) return;
       game.index += 1;
       if (game.lives <= 0 || game.index >= game.questions.length) {
         finish();
@@ -206,10 +298,10 @@
 
   function finish() {
     game.locked = true;
-    const total = game.questions.length;
+    stopTimer();
     endTextEl.textContent = game.lives <= 0
       ? `Жизни закончились! Счёт: ${game.score}`
-      : `Отлично! Вы набрали ${game.score} из ${total}`;
+      : `Отлично! Ваш счёт: ${game.score}`;
     endEl.classList.remove('hidden');
   }
 

@@ -95,6 +95,7 @@
       <div class="quiz-header">
         <div class="meta">Camera Quiz · <span id="cam-progress">1 / 10</span></div>
         <div class="cam-hud">
+          <span id="cam-timer" class="cam-timer">⏱ 10</span>
           <span class="score">Score: <span id="cam-score">0</span></span>
           <span id="cam-lives" class="cam-lives" aria-label="Lives"></span>
         </div>
@@ -102,6 +103,8 @@
 
       <div id="cam-stage" class="cam-stage">
         <video id="cam-video" playsinline muted></video>
+        <div class="cam-timer-track"><div id="cam-timer-bar" class="cam-timer-bar"></div></div>
+        <div id="cam-countdown" class="cam-countdown hidden"></div>
         <div id="cam-prompt" class="cam-prompt"></div>
         <div class="cam-choice" style="top:4%;left:3%" data-word=""></div>
         <div class="cam-choice" style="top:4%;right:3%" data-word=""></div>

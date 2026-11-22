@@ -61,3 +61,12 @@ footer{margin-top:20px;color:var(--muted);font-size:0.85rem}
 .cam-end.hidden{display:none}
 .cam-cursor.hidden{display:none}
 .cam-status{color:var(--muted);font-size:0.9rem;margin:8px 0 0}
+.cam-timer{font-weight:700;font-variant-numeric:tabular-nums;min-width:3.2em}
+.cam-timer.urgent{color:var(--danger)}
+.cam-timer-track{position:absolute;left:0;right:0;top:0;height:8px;background:rgba(0,0,0,0.35);z-index:4}
+.cam-timer-bar{height:100%;width:100%;background:#2ecc71;transition:width .1s linear,background-color .3s}
+.cam-timer-bar.urgent{background:var(--danger)}
+.cam-countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(3rem,14vw,8rem);font-weight:800;color:#ffd84d;text-shadow:0 4px 18px rgba(0,0,0,0.7);background:rgba(0,0,0,0.35);pointer-events:none;z-index:6}
+.cam-countdown.hidden{display:none}
+.cam-countdown.pop{animation:cam-pop .9s ease-out}
+@keyframes cam-pop{0%{transform:scale(1.6);opacity:0}25%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:.85}}
